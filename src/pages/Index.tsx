@@ -1,14 +1,26 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+/**
+ * Index - Main application page
+ * Manages mode switching between Visualizer and Map modes
+ */
+
+import React, { useState } from 'react';
+import { AppMode } from '@/core/types';
+import { ModeSelector } from '@/components/ModeSelector';
+import { AlgorithmVisualizer } from '@/components/visualizer/AlgorithmVisualizer';
+import { MapView } from '@/components/map/MapView';
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [mode, setMode] = useState<AppMode | null>(null);
+  
+  if (!mode) {
+    return <ModeSelector onSelectMode={setMode} />;
+  }
+  
+  if (mode === 'visualizer') {
+    return <AlgorithmVisualizer />;
+  }
+  
+  return <MapView onSwitchMode={() => setMode('visualizer')} />;
 };
 
 export default Index;
