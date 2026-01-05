@@ -23,12 +23,19 @@ import { InsightPanel } from './InsightPanel';
 import { ControlPanel } from './ControlPanel';
 import { Toolbar } from './Toolbar';
 import { EdgeWeightDialog } from './EdgeWeightDialog';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { Button } from '@/components/ui/button';
+import { Home } from 'lucide-react';
+
+interface AlgorithmVisualizerProps {
+  onBackToDashboard?: () => void;
+}
 
 type ToolMode = 'select-source' | 'select-target' | 'add-node' | 'add-edge' | 'view';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-export function AlgorithmVisualizer() {
+export function AlgorithmVisualizer({ onBackToDashboard }: AlgorithmVisualizerProps) {
   // Graph state
   const [graph, setGraph] = useState<Graph>(() => createSampleGraph());
   const [nodeCounter, setNodeCounter] = useState(6); // Sample graph has A-F
@@ -164,13 +171,26 @@ export function AlgorithmVisualizer() {
       {/* Header */}
       <header className="flex-shrink-0 border-b border-border bg-card px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">
-              Algorithm Visualizer
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Interactive shortest-path algorithm exploration
-            </p>
+          <div className="flex items-center gap-4">
+            {onBackToDashboard && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onBackToDashboard}
+                className="gap-2"
+              >
+                <Home className="h-4 w-4" />
+                Dashboard
+              </Button>
+            )}
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">
+                Algorithm Visualizer
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Interactive shortest-path algorithm exploration
+              </p>
+            </div>
           </div>
           <div className="text-sm text-muted-foreground">
             <span className="font-mono">{graph.nodes.size}</span> nodes,{' '}
@@ -179,88 +199,98 @@ export function AlgorithmVisualizer() {
         </div>
       </header>
       
-      {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main content with resizable panels */}
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
         {/* Left sidebar - Toolbar */}
-        <aside className="w-64 flex-shrink-0 border-r border-border bg-sidebar p-4 overflow-y-auto">
-          <Toolbar
-            mode={mode}
-            algorithm={algorithm}
-            sourceId={sourceId}
-            targetId={targetId}
-            onModeChange={setMode}
-            onAlgorithmChange={(alg) => {
-              setAlgorithm(alg);
-              visualizer.reset();
-            }}
-            onClearGraph={handleClearGraph}
-            onLoadSample={handleLoadSample}
-          />
-          
-          <div className="mt-4">
-            <ControlPanel
-              isRunning={visualizer.isRunning}
-              isPaused={visualizer.isPaused}
-              isComplete={visualizer.isComplete}
-              canStart={canStart}
-              currentStepIndex={visualizer.currentStepIndex}
-              totalSteps={visualizer.steps.length}
-              speed={visualizer.speed}
-              explanationLevel={visualizer.explanationLevel}
-              onStart={visualizer.start}
-              onPause={visualizer.pause}
-              onResume={visualizer.resume}
-              onReset={visualizer.reset}
-              onNextStep={visualizer.nextStep}
-              onPrevStep={visualizer.prevStep}
-              onSpeedChange={visualizer.setSpeed}
-              onExplanationLevelChange={visualizer.setExplanationLevel}
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+          <aside className="h-full border-r border-border bg-sidebar p-4 overflow-y-auto">
+            <Toolbar
+              mode={mode}
+              algorithm={algorithm}
+              sourceId={sourceId}
+              targetId={targetId}
+              onModeChange={setMode}
+              onAlgorithmChange={(alg) => {
+                setAlgorithm(alg);
+                visualizer.reset();
+              }}
+              onClearGraph={handleClearGraph}
+              onLoadSample={handleLoadSample}
             />
-          </div>
-        </aside>
+            
+            <div className="mt-4">
+              <ControlPanel
+                isRunning={visualizer.isRunning}
+                isPaused={visualizer.isPaused}
+                isComplete={visualizer.isComplete}
+                canStart={canStart}
+                currentStepIndex={visualizer.currentStepIndex}
+                totalSteps={visualizer.steps.length}
+                speed={visualizer.speed}
+                explanationLevel={visualizer.explanationLevel}
+                onStart={visualizer.start}
+                onPause={visualizer.pause}
+                onResume={visualizer.resume}
+                onReset={visualizer.reset}
+                onNextStep={visualizer.nextStep}
+                onPrevStep={visualizer.prevStep}
+                onSpeedChange={visualizer.setSpeed}
+                onExplanationLevelChange={visualizer.setExplanationLevel}
+              />
+            </div>
+          </aside>
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
         
         {/* Center - Graph canvas */}
-        <main className="flex-1 relative">
-          <GraphCanvas
-            graph={graph}
-            currentStep={visualizer.currentStep}
-            sourceId={sourceId}
-            targetId={targetId}
-            selectedNodeId={selectedNodeId}
-            onNodeClick={handleNodeClick}
-            onCanvasClick={handleCanvasClick}
-            onNodeDrag={handleNodeDrag}
-            mode={mode}
-            edgeStartNode={edgeStartNode}
-          />
-          
-          {/* Mode indicator */}
-          {mode !== 'view' && (
-            <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-sm font-medium">
-              {mode === 'add-node' && 'Click canvas to add node'}
-              {mode === 'add-edge' && (edgeStartNode ? `Click second node (from ${edgeStartNode})` : 'Click first node')}
-              {mode === 'select-source' && 'Click node to set as source'}
-              {mode === 'select-target' && 'Click node to set as target'}
-            </div>
-          )}
-        </main>
+        <ResizablePanel defaultSize={55} minSize={30}>
+          <main className="h-full relative">
+            <GraphCanvas
+              graph={graph}
+              currentStep={visualizer.currentStep}
+              sourceId={sourceId}
+              targetId={targetId}
+              selectedNodeId={selectedNodeId}
+              onNodeClick={handleNodeClick}
+              onCanvasClick={handleCanvasClick}
+              onNodeDrag={handleNodeDrag}
+              mode={mode}
+              edgeStartNode={edgeStartNode}
+            />
+            
+            {/* Mode indicator */}
+            {mode !== 'view' && (
+              <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-sm font-medium">
+                {mode === 'add-node' && 'Click canvas to add node'}
+                {mode === 'add-edge' && (edgeStartNode ? `Click second node (from ${edgeStartNode})` : 'Click first node')}
+                {mode === 'select-source' && 'Click node to set as source'}
+                {mode === 'select-target' && 'Click node to set as target'}
+              </div>
+            )}
+          </main>
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
         
         {/* Right sidebar - Educational panels */}
-        <aside className="w-80 flex-shrink-0 border-l border-border bg-sidebar flex flex-col">
-          <div className="flex-1 border-b border-border overflow-hidden">
-            <PseudocodePanel
-              algorithm={algorithm}
-              currentLine={visualizer.currentStep?.pseudocodeLine ?? -1}
-            />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <InsightPanel
-              currentStep={visualizer.currentStep}
-              explanationLevel={visualizer.explanationLevel}
-            />
-          </div>
-        </aside>
-      </div>
+        <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>
+          <aside className="h-full border-l border-border bg-sidebar flex flex-col">
+            <div className="flex-1 border-b border-border overflow-hidden">
+              <PseudocodePanel
+                algorithm={algorithm}
+                currentLine={visualizer.currentStep?.pseudocodeLine ?? -1}
+              />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <InsightPanel
+                currentStep={visualizer.currentStep}
+                explanationLevel={visualizer.explanationLevel}
+              />
+            </div>
+          </aside>
+        </ResizablePanel>
+      </ResizablePanelGroup>
       
       {/* Edge weight dialog */}
       <EdgeWeightDialog

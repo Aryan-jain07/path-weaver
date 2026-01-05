@@ -12,15 +12,17 @@ import { MapView } from '@/components/map/MapView';
 const Index = () => {
   const [mode, setMode] = useState<AppMode | null>(null);
   
+  const handleBackToDashboard = () => setMode(null);
+  
   if (!mode) {
     return <ModeSelector onSelectMode={setMode} />;
   }
   
   if (mode === 'visualizer') {
-    return <AlgorithmVisualizer />;
+    return <AlgorithmVisualizer onBackToDashboard={handleBackToDashboard} />;
   }
   
-  return <MapView onSwitchMode={() => setMode('visualizer')} />;
+  return <MapView onBackToDashboard={handleBackToDashboard} />;
 };
 
 export default Index;
