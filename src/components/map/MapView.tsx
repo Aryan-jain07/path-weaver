@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Navigation } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LeafletMap } from './LeafletMap';
 import { MapControlPanel } from './MapControlPanel';
@@ -12,10 +12,10 @@ import { MapInfoPanel } from './MapInfoPanel';
 import { useMapRouting } from '@/hooks/useMapRouting';
 
 interface MapViewProps {
-  onSwitchMode: () => void;
+  onBackToDashboard?: () => void;
 }
 
-export function MapView({ onSwitchMode }: MapViewProps) {
+export function MapView({ onBackToDashboard }: MapViewProps) {
   const {
     markers,
     route,
@@ -34,18 +34,27 @@ export function MapView({ onSwitchMode }: MapViewProps) {
       {/* Header */}
       <header className="flex-shrink-0 border-b border-border bg-card px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">
-              Real-World Pathfinding
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Find shortest paths on real maps using A* algorithm
-            </p>
+          <div className="flex items-center gap-4">
+            {onBackToDashboard && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onBackToDashboard}
+                className="gap-2"
+              >
+                <Home className="h-4 w-4" />
+                Dashboard
+              </Button>
+            )}
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">
+                Real-World Pathfinding
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Find shortest paths on real maps using A* algorithm
+              </p>
+            </div>
           </div>
-          <Button variant="outline" onClick={onSwitchMode}>
-            <Navigation className="h-4 w-4 mr-2" />
-            Switch to Visualizer
-          </Button>
         </div>
       </header>
       
