@@ -107,9 +107,6 @@ export function ModeSelector({ onSelectMode }: ModeSelectorProps) {
                 <span className="px-2 py-1 bg-accent/10 text-accent text-xs rounded">
                   A* + Haversine
                 </span>
-                <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
-                  Coming Soon
-                </span>
               </div>
             </button>
           </div>
