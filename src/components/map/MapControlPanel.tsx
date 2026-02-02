@@ -168,6 +168,9 @@ export function MapControlPanel({
               <div>
                 <p className="text-sm font-medium">Route Error</p>
                 <p className="text-xs mt-0.5">{route.error}</p>
+                <p className="text-xs mt-2 text-muted-foreground">
+                  Tip: Make sure both points are on or near roads. The routing service works globally.
+                </p>
               </div>
             </div>
           ) : (
