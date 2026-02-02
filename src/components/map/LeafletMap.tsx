@@ -185,10 +185,18 @@ export function LeafletMap({
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove existing route layers
+    // Remove existing route layers (handle both LayerGroup and legacy Polyline from HMR)
     if (routeLayerRef.current) {
-      routeLayerRef.current.clearLayers();
-    } else {
+      if ('clearLayers' in routeLayerRef.current && typeof routeLayerRef.current.clearLayers === 'function') {
+        routeLayerRef.current.clearLayers();
+      } else {
+        // Legacy: was a Polyline, just remove it
+        routeLayerRef.current.remove();
+        routeLayerRef.current = null;
+      }
+    }
+    
+    if (!routeLayerRef.current) {
       routeLayerRef.current = L.layerGroup().addTo(mapRef.current);
     }
 
