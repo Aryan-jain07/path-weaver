@@ -43,24 +43,41 @@ export function useMapRouting() {
   const [showExplored, setShowExplored] = useState(false);
 
   // Fetch route from OSRM public demo server
+  // The demo server works globally but may have occasional availability issues
   const fetchRoute = useCallback(async (start: MapMarker, end: MapMarker) => {
     setRoute({ coordinates: [], distance: 0, duration: 0, isLoading: true });
     setExploredNodes([]);
 
     try {
       // OSRM expects coordinates as lng,lat
+      // Using the public OSRM demo server - works worldwide for driving routes
       const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true&annotations=true`;
       
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch route');
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`);
       }
 
       const data: OSRMResponse = await response.json();
 
+      if (data.code === 'NoRoute') {
+        throw new Error('No driving route exists between these points. Try points closer to roads.');
+      }
+      
+      if (data.code === 'NoSegment') {
+        throw new Error('One or both points are too far from any road. Click closer to a road.');
+      }
+
       if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
-        throw new Error('No route found');
+        throw new Error(`Could not find route: ${data.code || 'Unknown error'}`);
       }
 
       const routeData = data.routes[0];
@@ -83,12 +100,22 @@ export function useMapRouting() {
       });
     } catch (error) {
       console.error('Routing error:', error);
+      
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timed out. The routing server may be busy. Please try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       setRoute({
         coordinates: [],
         distance: 0,
         duration: 0,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       });
     }
   }, []);
