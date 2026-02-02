@@ -87,6 +87,9 @@ export function LeafletMap({
       center: [40.7128, -74.006], // New York City
       zoom: 13,
       zoomControl: true,
+      // Prevent accumulating longitudes outside [-180, 180] when panning across the world.
+      // This helps keep route requests valid for services like OSRM.
+      worldCopyJump: true,
     });
 
     // Add OpenStreetMap tiles

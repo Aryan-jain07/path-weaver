@@ -6,6 +6,17 @@
 import { useState, useCallback } from 'react';
 import { MapMarker, RouteData, ExploredNode } from '@/components/map/LeafletMap';
 
+// Leaflet can return longitudes outside [-180, 180] when the map wraps horizontally.
+// OSRM rejects those values, so we normalize before building the request URL.
+function normalizeLongitude(lng: number): number {
+  // Map any number to [-180, 180)
+  return ((((lng + 180) % 360) + 360) % 360) - 180;
+}
+
+function clampLatitude(lat: number): number {
+  return Math.max(-90, Math.min(90, lat));
+}
+
 interface OSRMResponse {
   code: string;
   routes: Array<{
@@ -49,9 +60,21 @@ export function useMapRouting() {
     setExploredNodes([]);
 
     try {
+      const startLat = clampLatitude(start.lat);
+      const startLng = normalizeLongitude(start.lng);
+      const endLat = clampLatitude(end.lat);
+      const endLng = normalizeLongitude(end.lng);
+
+      // If Leaflet reported an “unwrapped” longitude (e.g., -282), keep the same world copy
+      // when rendering route geometry so it lines up visually with the markers.
+      const lngOffset = start.lng - startLng;
+
+      const normalizedStart: MapMarker = { ...start, lat: startLat, lng: startLng };
+      const normalizedEnd: MapMarker = { ...end, lat: endLat, lng: endLng };
+
       // OSRM expects coordinates as lng,lat
       // Using the public OSRM demo server - works worldwide for driving routes
-      const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true&annotations=true`;
+      const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true&annotations=true`;
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
@@ -60,6 +83,14 @@ export function useMapRouting() {
       clearTimeout(timeoutId);
       
       if (!response.ok) {
+        // OSRM returns JSON bodies even on errors; surface the actual reason when possible.
+        const errBody = await response.json().catch(() => null) as null | { code?: string; message?: string };
+        if (errBody?.code === 'InvalidValue') {
+          throw new Error('Invalid coordinate value. Try reloading the page and selecting points again.');
+        }
+        if (errBody?.message) {
+          throw new Error(errBody.message);
+        }
         if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please wait a moment and try again.');
         }
@@ -67,6 +98,10 @@ export function useMapRouting() {
       }
 
       const data: OSRMResponse = await response.json();
+
+      if (data.code === 'InvalidValue') {
+        throw new Error('Invalid coordinates. If you dragged the map around the world, try reloading and selecting points again.');
+      }
 
       if (data.code === 'NoRoute') {
         throw new Error('No driving route exists between these points. Try points closer to roads.');
@@ -83,13 +118,21 @@ export function useMapRouting() {
       const routeData = data.routes[0];
       
       // Convert coordinates from [lng, lat] to [lat, lng] for Leaflet
-      const coordinates: [number, number][] = routeData.geometry.coordinates.map(
-        coord => [coord[1], coord[0]]
-      );
+      const coordinates: [number, number][] = routeData.geometry.coordinates.map((coord) => {
+        const lat = coord[1];
+        const lng = coord[0] + lngOffset;
+        return [lat, lng];
+      });
 
       // Simulate explored nodes for educational visualization
       // In a real implementation, these would come from our A* algorithm
-      const simulatedExplored = generateExploredNodes(start, end, coordinates);
+      const simulatedExplored = generateExploredNodes(
+        normalizedStart,
+        normalizedEnd,
+        // Use normalized coordinates for the simulation, then offset for display.
+        routeData.geometry.coordinates.map((coord) => [coord[1], coord[0]])
+      ).map((n) => ({ ...n, lng: n.lng + lngOffset }));
+
       setExploredNodes(simulatedExplored);
 
       setRoute({
