@@ -76,7 +76,7 @@ export function LeafletMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
-  const routeLayerRef = useRef<L.Polyline | null>(null);
+  const routeLayerRef = useRef<L.LayerGroup | null>(null);
   const exploredLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Initialize map
@@ -185,10 +185,11 @@ export function LeafletMap({
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove existing route
+    // Remove existing route layers
     if (routeLayerRef.current) {
-      routeLayerRef.current.remove();
-      routeLayerRef.current = null;
+      routeLayerRef.current.clearLayers();
+    } else {
+      routeLayerRef.current = L.layerGroup().addTo(mapRef.current);
     }
 
     // Add new route if available
@@ -196,23 +197,25 @@ export function LeafletMap({
       const latLngs = route.coordinates.map(coord => L.latLng(coord[0], coord[1]));
       
       // Route shadow for depth
-      L.polyline(latLngs, {
+      const shadow = L.polyline(latLngs, {
         color: '#000',
         weight: 8,
         opacity: 0.2,
-      }).addTo(mapRef.current);
+      });
+      routeLayerRef.current.addLayer(shadow);
 
       // Main route line
-      routeLayerRef.current = L.polyline(latLngs, {
+      const mainRoute = L.polyline(latLngs, {
         color: '#3b82f6',
         weight: 5,
         opacity: 0.9,
         lineJoin: 'round',
         lineCap: 'round',
-      }).addTo(mapRef.current);
+      });
+      routeLayerRef.current.addLayer(mainRoute);
 
-      // Animate the route
-      const path = routeLayerRef.current.getElement() as SVGPathElement | null;
+      // Animate the route (works with SVG renderer)
+      const path = mainRoute.getElement() as SVGPathElement | null;
       if (path && path.getTotalLength) {
         const length = path.getTotalLength();
         if (length) {
