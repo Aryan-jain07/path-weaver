@@ -3,12 +3,13 @@
  * Interactive map with click-to-place markers and route visualization
  */
 
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LeafletMap } from './LeafletMap';
+import { LeafletMap, LeafletMapRef } from './LeafletMap';
 import { MapControlPanel } from './MapControlPanel';
 import { MapInfoPanel } from './MapInfoPanel';
+import { MapSearchBox } from './MapSearchBox';
 import { useMapRouting } from '@/hooks/useMapRouting';
 
 interface MapViewProps {
@@ -16,6 +17,8 @@ interface MapViewProps {
 }
 
 export function MapView({ onBackToDashboard }: MapViewProps) {
+  const mapRef = useRef<LeafletMapRef>(null);
+  
   const {
     markers,
     route,
@@ -28,6 +31,10 @@ export function MapView({ onBackToDashboard }: MapViewProps) {
     clearAll,
     swapMarkers,
   } = useMapRouting();
+
+  const handleLocationSelect = useCallback((lat: number, lng: number, name: string) => {
+    mapRef.current?.flyTo(lat, lng, 15);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -62,7 +69,13 @@ export function MapView({ onBackToDashboard }: MapViewProps) {
       <div className="flex-1 flex overflow-hidden">
         {/* Map */}
         <main className="flex-1 relative">
+          {/* Search box overlay */}
+          <div className="absolute top-4 left-4 right-4 z-[1000] max-w-md">
+            <MapSearchBox onLocationSelect={handleLocationSelect} />
+          </div>
+          
           <LeafletMap
+            ref={mapRef}
             markers={markers}
             route={route}
             exploredNodes={exploredNodes}

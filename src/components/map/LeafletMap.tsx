@@ -3,7 +3,7 @@
  * and shortest path visualization using real OpenStreetMap data
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -39,6 +39,10 @@ export interface ExploredNode {
   lng: number;
 }
 
+export interface LeafletMapRef {
+  flyTo: (lat: number, lng: number, zoom?: number) => void;
+}
+
 interface LeafletMapProps {
   markers: MapMarker[];
   route: RouteData | null;
@@ -65,19 +69,26 @@ const createIcon = (color: string, label: string) => {
   });
 };
 
-export function LeafletMap({
+export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(function LeafletMap({
   markers,
   route,
   exploredNodes,
   showExplored,
   onMapClick,
   onMarkerDrag,
-}: LeafletMapProps) {
+}, ref) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayerRef = useRef<L.LayerGroup | null>(null);
   const exploredLayerRef = useRef<L.LayerGroup | null>(null);
+
+  // Expose flyTo method via ref
+  useImperativeHandle(ref, () => ({
+    flyTo: (lat: number, lng: number, zoom = 14) => {
+      mapRef.current?.flyTo([lat, lng], zoom, { duration: 1.5 });
+    },
+  }), []);
 
   // Initialize map
   useEffect(() => {
@@ -272,4 +283,4 @@ export function LeafletMap({
       style={{ minHeight: '400px' }}
     />
   );
-}
+});
