@@ -177,26 +177,14 @@ export function MapControlPanel({
             <>
               <h3 className="text-sm font-semibold text-foreground">Route Info</h3>
               
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-card rounded-lg border border-border p-3">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Route className="w-3 h-3" />
-                    <span className="text-xs">Distance</span>
-                  </div>
-                  <p className="text-lg font-semibold text-foreground">
-                    {formatDistance(route.distance)}
-                  </p>
+              <div className="bg-card rounded-lg border border-border p-3">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Route className="w-3 h-3" />
+                  <span className="text-xs">Distance</span>
                 </div>
-                
-                <div className="bg-card rounded-lg border border-border p-3">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Clock className="w-3 h-3" />
-                    <span className="text-xs">Duration</span>
-                  </div>
-                  <p className="text-lg font-semibold text-foreground">
-                    {formatDuration(route.duration)}
-                  </p>
-                </div>
+                <p className="text-lg font-semibold text-foreground">
+                  {formatDistance(route.distance)}
+                </p>
               </div>
 
               {/* Show Explored Toggle */}
