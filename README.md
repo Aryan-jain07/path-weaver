@@ -57,9 +57,3 @@ A map-based route finder to understand how “shortest path” applies to real r
 
 - Routing uses a **public OSRM demo server**, so it may be rate-limited or temporarily unavailable.
 - Real‑world routing results depend on road coverage near your selected points (choose points close to roads).
-
----
-
-## License
-
-No `LICENSE` file is currently included. If you plan to open-source this project, add a license (e.g., MIT).
