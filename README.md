@@ -53,34 +53,6 @@ A map-based route finder to understand how “shortest path” applies to real r
 
 ---
 
-## Getting Started (Local Development)
-
-### Prerequisites
-- Node.js (recommended: LTS)
-- npm
-
-### Setup
-
-```sh
-git clone https://github.com/Aryan-jain07/path-weaver.git
-cd path-weaver
-npm install
-npm run dev
-```
-
----
-
-## Scripts
-
-```sh
-npm run dev      # start dev server
-npm run build    # production build
-npm run preview  # preview production build locally
-npm run lint     # run eslint
-```
-
----
-
 ## Notes / Limitations
 
 - Routing uses a **public OSRM demo server**, so it may be rate-limited or temporarily unavailable.
